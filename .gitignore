@@ -91,6 +91,10 @@ secrets.py
 /IRs
 ./IRs
 
+# app database
+app.db 
+
+
 # paste board
 sketchpad.txt
 

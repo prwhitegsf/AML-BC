@@ -1,30 +1,19 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, Session
+from sqlalchemy.orm import Session
 import os, glob
 import sys
+from sqlalchemy_utils import database_exists, create_database
+
+from app.models import Ravdess,User,Base
 
 
-class Base(DeclarativeBase):
-    pass
 
-
-class Records(Base):
-    __tablename__ = "ravdess_metadata"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    filepath: Mapped[str] 
-    actor: Mapped[int]
-    sex: Mapped[str]
-    statement: Mapped[str]
-    emotion: Mapped[str]
-    intensity: Mapped[int]
-    sample_rate: Mapped[int]
-    filesize: Mapped[int]
 
 # we derive metadata from the filename according to:
 # https://zenodo.org/records/1188976
 class CreateRAVDESSMetadata():
 
-    def __init__(self, db_name='db_name', folder='app/static/datasets/RAVDESS/audio/'):
+    def __init__(self, db_name='db_name', folder='datasets/RAVDESS/audio/'):
         
         self.emotions = {
             '01':'neutral',
@@ -43,7 +32,10 @@ class CreateRAVDESSMetadata():
         
 
     def get_engine(self,db_name):
-        return create_engine(f'sqlite+pysqlite:///{db_name}')
+        engine = create_engine(f'postgresql+psycopg2://postgres:abc@localhost/{db_name}')
+        if not database_exists(engine.url):
+            create_database(engine.url)
+        return engine
 
     def get_actor(self, filename):
         return int(filename.split("-")[6].split('.')[0]) 
@@ -58,23 +50,18 @@ class CreateRAVDESSMetadata():
         
         for file in glob.glob(f'{self.dataset_folder}Actor_*/*.wav'):
             
-            id = count
             file = os.path.normpath(file)
-            
-            
             filename = os.path.basename(file)
-            
-            actor = self.get_actor(filename)
-            sex = self.get_actor_sex(filename)
-            statement = filename.split("-")[4]
-            emotion = self.emotions[filename.split("-")[2]]
-            intensity = filename.split("-")[3]
-            filesize = os.path.getsize(file)
 
-            rec = Records(id=id,filepath=file, actor=actor,sex=sex,
-                          statement=statement,emotion=emotion,
-                          intensity=intensity,sample_rate=16000,
-                          filesize=filesize)
+            rec = Ravdess(id=count,
+                          filepath=file, 
+                          actor=int(filename.split("-")[6].split('.')[0]) ,
+                          sex=self.get_actor_sex(filename),
+                          statement=int(filename.split("-")[4]),
+                          emotion=self.emotions[filename.split("-")[2]],
+                          intensity = int(filename.split("-")[3]),
+                          sample_rate=16000,
+                          filesize=os.path.getsize(file))
             session.add(rec)
             count += 1
 

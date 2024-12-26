@@ -7,8 +7,9 @@ def create_range():
         rng = list(range(1,25))
         nums = ['all']
         for i in rng:
-             item = (str(i),str(i))
+             item = str(i)
              nums.append(item)      
+        
         return nums
 
 class ViewDataDistributions(FlaskForm):

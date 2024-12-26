@@ -1,88 +1,102 @@
 /* add h1 at some point */
 
+
 .content {
-    /* this will be dependent on viewport */
+    
     display: grid;
-    grid-template-columns: 4in 5in;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 400px));
+    
 }
 
-.content-info{
+.content content-info{
+    
     display: grid;
     grid-template-rows: 3in 1.5in 5in;
     margin: 10px;
     padding: 10px;
     gap: 10px;
+
 }
 
-
-.content-viz{
-    display: grid;
-    grid-template-rows: auto auto auto auto;
+.content content-viz{
+    justify-content: center;
 }
 
-/* form - related ::::::::::::::::::::::::::::::::::   */
-
-
-.filters-form{
+.filters{
     margin: 5px;
     padding: 0;
     display: grid;
     grid-template-rows: auto auto auto;
 }
 
-.filters-first-row{
+.first-row{
     display: grid;
-    grid-template-columns: auto auto auto;
-    justify-content: stretch;
-    margin-bottom: 20px;
+    grid-template-columns: 80px 80px 80px 80px;
+    justify-content: space-between;
+
+    margin-bottom: 15px;
+
 }
 
-.filters-second-row{
+.first-row dropdown-unit{
+    justify-items: center;
     display: grid;
-    grid-template-columns: 40% 30% 30%;
-
-    grid-template-areas: 
-        "emotion mels mfcc"
-        "emotion mels mfcc"
-        "emotion mels mfcc";
+    grid-template-rows: 30px auto;
 }
 
-.form-dropdown{
-    display: grid;
-    grid-template-rows: auto auto;
+.first-row dropdown-element{
+    width: 80px;
 }
+
+
+.second-row{
+    display: grid;
+    grid-template-columns: 100px 80px 80px;
+    justify-content: space-between;
+    margin-bottom: 15px;
+
+}
+
+
+.submit-button{
+    width: 100%;
+    background-color: rgb(30, 78, 210);
+    color: aliceblue;
+   
+}
+
+
+
+
+.responsive-feature-viz {
+    max-width: 100%;
+    height: auto;
+  }
+
+.text-box{
+
+    margin: 10px;
+    padding: 10px;
+    
+}
+/* form - related ::::::::::::::::::::::::::::::::::   */
+
+
+
+
 
 .record-nav{
-    display: grid;
+    
     grid-template-rows: auto auto;
     align-content: start;
-    justify-content: start;
+    justify-content: space-between;
+    margin-top: 15px;
+   
 }
 
-#sex{
-    grid-column: 1 / 2;
-}
 
-#statement{
-    grid-column: 2 / 3;
-    justify-self: center;
-}
 
-#intensity{
-    grid-column: 3 / 4;
-}
-
-#emotion{
-    grid-area: emotion;
-}
-
-#mels{
-    grid-area: mels;
-}
-
-#mfcc{
-    grid-area: mfcc;
-}
 
 #record-info{
     grid-row: 1 / 2;
@@ -98,10 +112,16 @@
 #next-button{
     grid-row: 2 / 3;
     margin: 5px;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: space-between;
 }
 
 #audio-player{
 
     grid-row: 3 / 4;
     margin: 5px;
+    width: 100%;
+
+    height: 50px;
 }

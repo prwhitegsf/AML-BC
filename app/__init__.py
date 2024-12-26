@@ -3,31 +3,37 @@ from logging.handlers import RotatingFileHandler
 
 import os
 from flask import Flask, session
-from flask_session import Session
+#from flask_session import Session
 
 from config import Config
 from app.models import db
 
-sess = Session()
-Config.SESSION_SQLALCHEMY = db
+#sess = Session()
+#Config.SESSION_SQLALCHEMY = db
 
 
 def create_app(config_class=Config):
     
     # App object from config class
     app = Flask(__name__)
-    app.config_from_object(config_class)
+    app.config.from_object(config_class)
 
+    db.init_app(app)
     # Register blueprints
     from app.intro import bp as intro_bp
+    from app.features import bp as feature_bp
+    from app.labels import bp as labels_bp
     app.register_blueprint(intro_bp)
 
-    from app.features import bp as feature_bp
+    
     app.register_blueprint(feature_bp) 
     
-    from app.labels import bp as labels_bp
+
     app.register_blueprint(labels_bp)
 
+   
+    
+    #sess.init_app(app)
 
     # logging, useful when deployed to production
     if not app.debug and not app.testing:

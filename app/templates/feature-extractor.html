@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Audio Feature Extraction</h1>
+
+    <div class="content">
+        <div class="content-info">
+            <form method="POST" id="filter-data-form" class="filters"> 
+                
+                {{g.form.csrf_token }}
+                
+                <div class="first-row">
+                    
+                    <div class="dropdown-unit">
+                        actor<br>
+                        <span>{{ g.form.actor(class="dropdown-element") }}</span>
+                    </div>
+
+                    <div class="dropdown-unit">
+                        sex<br>
+                        <span>{{ g.form.sex(class="dropdown-element") }}</span>
+                    </div>    
+
+                    <div class="dropdown-unit">
+                        phrase<br>
+                        <span>{{ g.form.statement(class="dropdown-element")  }}</span>
+                        
+                    </div> 
+
+                    <div class="dropdown-unit">
+                        intensity<br>
+                        <span>{{ g.form.intensity(class="dropdown-element") }}</span>
+                    </div> 
+                    
+                </div>
+                
+                <div class="second-row">
+                    <p >
+                        emotion<br>
+                        <span>  {{ g.form.emotion }}</span>
+                    </p>
+                    <p >
+                        mels<br>
+                        {% for subfield in g.form.num_mels %}
+                                    
+                            {{subfield}}
+                            {{subfield.label}}<br>
+                                    
+                        {% endfor %}
+                    </p>
+
+                    <p >
+                        mfccs<br>
+                        {% for subfield in g.form.num_mfcc %}
+                                    
+                            {{subfield}}
+                            {{subfield.label}}<br>
+                                    
+                        {% endfor %}
+                    </p>
+                    
+                </div>    
+                    
+                <div >{{ g.form.submit(class="submit-button") }}</div>
+            
+            </form>
+                
+            
+            
+            <div class="record-nav">
+
+                <form method="POST" id="next-button" >                     
+                 
+                    <span>{{ next_button.next }}</span> 
+                    <span>{{ record_text}}  </span>
+                        
+                </form>
+
+                <audio id="audio-player" controls src= "{{ url_for('static',filename=audio_file) }}"></audio> 
+                
+            </div>
+            
+            <div class="text-box">
+                Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. 
+               
+            </div>
+        
+        </div>
+        
+        <div class="content-viz">
+       
+            <img id="plot" src="{{ url_for('static',filename=img_file) }}" alt="Matplotlib Plot" class="responsive-feature-viz">
+           
+        </div>  
+
+    </div>
+
+{% endblock %}
