@@ -1,4 +1,4 @@
-from app.models import ravdess_metadata as md
+from app.main.models import ravdess_metadata as md
 from tests.params import filter_params
 from app import db
 #from test.conftest import app, app_ctx, client

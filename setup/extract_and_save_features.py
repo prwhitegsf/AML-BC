@@ -7,7 +7,7 @@ import torchaudio.transforms as T
 import numpy as np
 import pandas as pd
 
-from app.models import Ravdess as rm
+from app.main.models import Ravdess as rm
 
 def get_torch_mfcc(waveform, *,n_fft=2048, hop_length=128, n_mels=128,n_mfcc=40,sample_rate=16000):
     mfcc_transform = T.MFCC(

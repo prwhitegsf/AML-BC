@@ -74,6 +74,12 @@
     height: auto;
   }
 
+
+.responsive-label-viz {
+    max-width: 120%;
+    height: auto;
+  }
+
 .text-box{
 
     margin: 10px;

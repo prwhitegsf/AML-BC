@@ -149,7 +149,7 @@ def get_feature_extraction_plots(af):
 
 def get_mfcc_plots(sess, af):
     
-    fig = Figure(figsize=(9, 10),layout='constrained')
+    fig = Figure(figsize=(6, 8),layout='constrained')
     
     mfccs, ids = af.get_mfcc_group_from_npy(sess)
 

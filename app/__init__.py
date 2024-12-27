@@ -6,7 +6,7 @@ from flask import Flask, session
 #from flask_session import Session
 
 from config import Config
-from app.models import db
+from app.main.models import db
 
 #sess = Session()
 #Config.SESSION_SQLALCHEMY = db
@@ -20,16 +20,12 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     # Register blueprints
-    from app.intro import bp as intro_bp
-    from app.features import bp as feature_bp
-    from app.labels import bp as labels_bp
-    app.register_blueprint(intro_bp)
-
-    
-    app.register_blueprint(feature_bp) 
+   
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp) 
     
 
-    app.register_blueprint(labels_bp)
+
 
    
     

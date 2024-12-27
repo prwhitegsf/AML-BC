@@ -4,7 +4,7 @@ import os, glob
 import sys
 from sqlalchemy_utils import database_exists, create_database
 
-from app.models import Ravdess,User,Base
+from app.main.models import Ravdess,User,Base
 
 
 

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from create_db import User
 from sqlalchemy import delete
 
-from app.models import Ravdess,User,Base
+from app.main.models import Ravdess,User,Base
 
 # remove user record if older than 10 minutes
 remove_after = 10 

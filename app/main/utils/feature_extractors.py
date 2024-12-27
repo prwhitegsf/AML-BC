@@ -81,7 +81,7 @@ class AudioFeatures():
         for id in  g.id_group:
             
             ids.append(id)
-            print("id loop: ",id)
+            #print("id loop: ",id)
             label_df = df.loc[df['id'] == id]
             mfccs.append(torch.from_numpy(label_df['feature_viz'].iloc[0]))
         return mfccs, ids
