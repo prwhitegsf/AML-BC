@@ -72,7 +72,7 @@
                 <form method="POST" id="next-button" >                     
                  
                     <span>{{ next_group.next  }}</span> 
-                    <span>{{ record_text}}  </span>
+                    <span>{{ record_count_text}}  </span>
                         
                 </form>
 
@@ -81,7 +81,10 @@
                     {{ next_audio_file.next_audio_file }}<br>
                 </form>
             </div>
-            
+            <div class="record-text">
+                Current Audio Record ID: {{record_id}}<br>
+                {{record_text}}
+            </div>
             <div class="text-box">
                 Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. Example text. 
               

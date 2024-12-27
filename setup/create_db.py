@@ -46,7 +46,7 @@ class CreateRAVDESSMetadata():
 
     def get_md(self):
         session = Session(self.engine)
-        count = 0
+        count = 1
         
         for file in glob.glob(f'{self.dataset_folder}Actor_*/*.wav'):
             

@@ -1,4 +1,4 @@
-from flask import render_template, request,g
+from flask import render_template, request,g,flash,redirect, url_for
 from flask import session as sess
 from app.main import bp
 from app.main.forms import DataSetFilterForm, NextRecord, NextAudioRecord
@@ -27,6 +27,10 @@ def feature_extractor():
     if request.method == 'POST':
         # add check user funciton here
         if g.form.submit.data:
+            if s.check_incompatable_filters():
+                flash("Incompatible actor and sex settings: ")
+                flash(s.flashed)
+                return redirect(url_for('main.feature_extractor'))
             s.set_record_list(sess)
 
             
@@ -46,7 +50,9 @@ def feature_extractor():
         audio_file= audio_file,
         img_file=img_file,
         next_button=next_button, 
-        record_text=s.message)
+        record_count_text=s.message,
+        record_text=s.curr_record_info,
+        record_id=s.curr_id)
 
 
 #@bp.route('/', methods=['GET', 'POST'])
@@ -67,7 +73,11 @@ def get_label_mfccs():
     if request.method == 'POST':
         # add check user function
         if g.form.submit.data:
-            s.set_mfcc_labels(sess)
+            if s.check_incompatiable_filters():
+                flash("Incompatible actor and sex settings: ")
+                flash(s.flashed)
+                return redirect(url_for('main.get_label_mfccs'))
+            s.set_labels_list(sess)
 
 
         if next_group.next.data:
@@ -86,5 +96,7 @@ def get_label_mfccs():
         audio_file= audio_file,
         img_file=img_file,
         next_group=next_group,
-        next_audio_file=next_audio_file, 
-        record_text=s.message)
+        next_audio_file=next_audio_file,
+        record_count_text=s.message, 
+        record_text=s.curr_record_info,
+        record_id=s.curr_id)

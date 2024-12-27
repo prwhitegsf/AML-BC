@@ -12,7 +12,7 @@ import numpy as np
 import os
 import random, string
 
-
+from math import ceil,floor
 
 
 
@@ -149,26 +149,51 @@ def get_feature_extraction_plots(af):
 
 def get_mfcc_plots(sess, af):
     
-    fig = Figure(figsize=(6, 8),layout='constrained')
+    fig = Figure(figsize=(4, 8),layout='constrained')
     
     mfccs, ids = af.get_mfcc_group_from_npy(sess)
 
     plt_count = len(mfccs)
+    print("plot count: ", plt_count)
 
-    axs = fig.subplots(4,2)
-
-    col = 2
-    row = 4
-    i = 0
-    j = 0
-    k = 0
-    for i in range(col):
-        for j in range(row):
-            plot_mfcc(mfccs[k],title=f'mfcc: {ids[k]}',ylabel=None,ax=axs[j,i])
-            axs[j,i].set_xticks(ticks=[])
-            axs[j,i].set_yticks(ticks=[])
-            k+=1
+    if plt_count < 2:
+        axs=fig.subplots()
+        plot_mfcc(mfccs[0],title=f'ID: {ids[0]}',ylabel=None,ax=axs)
     
+    elif plt_count <= 4:
+        fig.set_figheight((plt_count*2))
+
+        axs=fig.subplots(plt_count)
+        for i in range(plt_count):
+            plot_mfcc(mfccs[i],title=f'ID: {ids[i]}',ylabel=None,ax=axs[i])
+
+    else:
+        add_plot = False
+
+        if plt_count%2 != 0:
+            add_plot=True
+
+        fig.set_figwidth(6)
+        cols = 2
+        rows = ceil(plt_count/2)
+        spec = fig.add_gridspec(rows,cols)
+
+        #axs = fig.subplots(row,col)
+
+        
+        i = 0
+        j = 0
+        k = 0
+        for i in range(cols):
+            for j in range(rows):
+                if k >= plt_count:
+                    break
+                ax=fig.add_subplot(spec[j,i])
+                plot_mfcc(mfccs[k],title=f'ID: {ids[k]}',ylabel=None,ax=ax)
+                ax.set_xticks(ticks=[])
+                ax.set_yticks(ticks=[])
+                k+=1
+        
 
     for filename in os.listdir('app/static/img/'):
              os.remove('app/static/img/' + filename)

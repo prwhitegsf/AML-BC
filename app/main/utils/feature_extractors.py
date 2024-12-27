@@ -78,7 +78,7 @@ class AudioFeatures():
         df = self._load_initial_data()
         mfccs =[]
         ids = []
-        for id in  g.id_group:
+        for id in g.id_group:
             
             ids.append(id)
             #print("id loop: ",id)

@@ -2,7 +2,7 @@ from flask import g
 from app.main.models import db
 
 from sqlalchemy import text
-from app.main.models import Ravdess as rav
+from app.main.models import Ravdess 
 from app.main.models import User
 import os,string,random
 from sqlalchemy import update
@@ -48,60 +48,141 @@ def create_record_list(stmt):
         urls.append(row.filepath)
         ids.append(row.id)
     
-    return urls, ids
+    return ids
 
 def get_all_records(db):
-    stmt = db.session.execute(db.select(rav)).scalars()
+    stmt = db.session.execute(db.select(Ravdess)).scalars()
     return create_record_list(stmt)
 
 def get_all_record_ids(db):
-    stmt = db.session.execute(db.select(rav)).scalars()
+    stmt = db.session.execute(db.select(Ravdess)).scalars()
     records = [row.id for row in stmt]
     return records
 
 
 def get_filtered_records(db):
-    stmt = db.session.execute(db.select(rav).where(text(create_where_clause()))).scalars()  
+    stmt = db.session.execute(db.select(Ravdess).where(text(create_where_clause()))).scalars()  
     return create_record_list(stmt)
+
+
+
+
 
 class SessionManager():
 
 
-    def __init__(self):
+    def __init__(self,group_size=8):
         
-        self.group_size=8   
+        self.group_size=group_size   
         self.message = ''
+        self.flashed = ""
+        self.curr_record_info = ""
+        self.curr_id = 0
 
-   
-
-    def init_sess(self, sess):
-        urls, ids = get_all_records(db)
-
-        self.message = f'Showing record {1} of {1440}'    
-
-
-        sess['user'] = generate_random_name()
-        g.fp = urls[0]
-        user = User(
-            username=sess['user'],
-            urls=urls,
-            ids=ids,
-            record_count=len(urls),
-            current_record = 0,
-            filters=g.form.data
-        )
-
-        g.id_group = ids[0:8]
-
+# database functions - these don't really need to be in this class
+# should probably just have a module with the above in another file
+    def add_user(self,username,filters):
+        user = User(username=username,filters=filters)
         db.session.add(user)
         db.session.commit()
 
 
-    def get_filter_dict(self):
+    def get_record_by_id(self,id):
+        row = db.session.execute(db.select(Ravdess.filepath, 
+                                            Ravdess.actor,
+                                            Ravdess.sex,
+                                            Ravdess.emotion,
+                                            Ravdess.statement,
+                                            Ravdess.intensity)
+                                            .where(Ravdess.id==id)).first() 
+        return row
 
-        filters = g.form.data
-        return filters
 
+    def update_id_list(self,username, record_count, ids,filters):
+        upd = (update(User)
+               .where(User.username==username)
+               .values( record_count=record_count,
+                        ids=ids,
+                        filters=filters))
+
+        db.session.execute(upd)
+        db.session.commit()
+
+
+    def get_user_record(self,sess):
+        row = db.session.execute(db.select(User.record_count, 
+                                            User.current_record,
+                                            User.filters,
+                                            User.ids,
+                                            User.audio_idx)
+                                            .where(User.username==sess['user'])).first()
+        return row
+
+
+    def update_record_number(self,sess,next_record,audio_idx=0):
+        upd = (update(User)
+               .where(User.username==sess['user'])
+               .values(current_record = next_record,
+                       audio_idx = audio_idx))
+
+        db.session.execute(upd)
+        db.session.commit()
+
+
+# General - used by both the feature-extractor and label-selector ---------------------------
+    
+    def check_incompatable_filters(self):
+        """Check that the form isn't selecting a sex with an incompatable actor number"""
+        if g.form.actor.data == 'all' or g.form.sex.data =='all':
+            return False
+        
+        if g.form.sex.data == "male" and int(g.form.actor.data)%2 == 0:
+            self.flashed = "Male actors have odd numbers."
+            return True
+        
+        if g.form.sex.data == "female" and int(g.form.actor.data)%2 == 1:
+            self.flashed = "Female actors have even numbers."
+            return True
+        
+        return False
+
+
+    def init_sess(self, sess):
+        # create user
+        sess['user'] = generate_random_name()
+
+        # current record
+        self.curr_id=1
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
+        g.id_group = list(range(1,self.group_size+1))
+
+        # Messages
+        self.set_current_record_info(record)
+        self.message = f'Showing record {1} of {1440}'  
+
+        # update db
+        self.add_user(username=sess['user'],filters=g.form.data)
+
+
+
+    def set_current_record_info(self, record):
+        self.curr_record_info = f'actor: {record.actor} | sex: {record.sex} | \
+        emotion: {record.emotion} | phrase: {record.statement} | intensity: {record.intensity}'
+
+
+    def _update_form_from_db(self,filters):
+        g.form.actor.data      = filters['actor']
+        g.form.sex.data       = filters['sex']
+        g.form.statement.data = filters['statement']
+        g.form.emotion.data   = filters['emotion']
+        g.form.intensity.data = filters['intensity']
+        
+        g.form.num_mels.data  = filters['num_mels']
+        g.form.num_mfcc.data  = filters['num_mfcc']
+
+
+    # need to think a little more about this
     def check_user(self,sess):
         row = db.session.execute(db.select(User.username)).scalars()
         userlist=[]
@@ -115,146 +196,145 @@ class SessionManager():
             print("could not find user: ", sess['user'])
             return False
 
-
+# Used by feature-extractor -----------------------------------------------------------
+ 
     def set_record_list(self, sess):
-
-        urls,ids = get_filtered_records(db)
-        self.check_user(sess)
-
-        g.fp = urls[0]
-        self.message = f'Showing record {1} of {len(urls)}' 
-
-        upd = (update(User)
-               .where(User.username==sess['user'])
-               .values(urls=urls[0:32],
-                        record_count=len(urls),
-                        ids=ids,
-                        current_record = 0,
-                        filters=g.form.data))
-
-        db.session.execute(upd)
-        db.session.commit()
-
-
-    def set_mfcc_labels(self,sess):
-        urls,ids = get_filtered_records(db)
-        self.check_user(sess)
-
         
-        self.message = f'Showing record {1} through 8 of {len(urls)}' 
+        # perform the query
+        ids = get_filtered_records(db)
+        record_count = len(ids)
 
-        upd = (update(User)
-               .where(User.username==sess['user'])
-               .values(urls=urls[0:32],
-                        record_count=len(urls),
-                        ids=ids,
-                        current_record = 0,
-                        filters=g.form.data))
+        # Get record id
+        self.curr_id = ids[0]
 
-        g.id_group = ids[0:8]
-        g.url_group = urls[0:8]
-        g.fp = g.url_group[0]
-        sess['audio_idx'] = 0
+        # get filepath
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
 
-        db.session.execute(upd)
-        db.session.commit()
+        # set messages
+        self.message = f'Showing record {1} of {record_count}' 
+        self.set_current_record_info(record)
+        
+        # update the user record
+        self.update_id_list(sess['user'],record_count,ids,g.form.data)
+
+
+    def get_next_record(self, sess):
+        
+        # Pull user record and update filters   
+        row = self.get_user_record(sess)
+        self._update_form_from_db(row.filters)
+        
+        # check we aren't going over, if we are simply loop back to first record 
+        record_count=row.record_count     
+        next_record = row.current_record + 1
+        if next_record >= record_count:
+            next_record = 0
+
+        self.curr_id=row.ids[next_record]
+
+        # Get filepath, set global
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
+
+        # set messages
+        self.message = f'Showing record {next_record+1} of {record_count}'
+        self.set_current_record_info(record)
+        
+        # udpate db with curr record
+        self.update_record_number(sess, next_record)
+
+
+
+# used by label-selector ------------------------------------------------------------
+
+    def set_labels_list(self,sess):
+        
+        # perform the query
+        ids = get_filtered_records(db)
+        record_count = len(ids)
+        
+        # check size of returned data against group_size
+        if record_count >= self.group_size:
+            g.id_group = ids[0:self.group_size]
+        else:
+            g.id_group = ids[0:record_count]
+
+        # get record id
+        self.curr_id = g.id_group[0]
+
+        # get filepath
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
+
+        # set messages
+        self.message = f'Showing record {1} through {len(g.id_group)} of {record_count}' 
+        self.set_current_record_info(record)
+
+        # update the user record
+        self.update_id_list(sess['user'],record_count,ids,g.form.data)
 
 
     def get_next_record_group(self, sess):
       
-        
-        row = db.session.execute(db.select(User.record_count, 
-                                            User.current_record,
-                                            User.filters,
-                                            User.urls,
-                                            User.ids)
-                                            .where(User.username==sess['user'])).first()
-        
+        # Pull user record and update filters
+        row = self.get_user_record(sess)
         self._update_form_from_db(row.filters)
         
-       
+        # check we aren't going over, if we are simply loop back to first record group
         next_rec = row.current_record+8
         record_count=row.record_count
         end_record = next_rec + 8
-
+        updated_record_number = next_rec
+        
         if end_record >= record_count:
-            return None
+            end_record=record_count # only display the remaining images
+            updated_record_number=next_rec = -1 * self.group_size # loop back to beginning on next "Next"
 
-        
-        g.url_group = row.urls[next_rec : end_record]
+        # Group and current record ids
         g.id_group = row.ids[next_rec : end_record]
-        g.fp = g.url_group[0]
+        self.curr_id = g.id_group[0]
 
-        sess['audio_idx'] = 0
-
-        self.message = f'Showing record {next_rec} through {end_record} of {record_count}' 
+        # Get record filepath
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
         
-        upd = (update(User)
-               .where(User.username==sess['user'])
-               .values(current_record = next_rec))
+        # Set messages
+        self.message = f'Showing record {next_rec+1} through {end_record} of {record_count}' 
+        self.set_current_record_info(record)
 
-        db.session.execute(upd)
-        db.session.commit()
-        
+        # update db
+        self.update_record_number(sess, updated_record_number)
+
        
     def get_next_audio_from_group(self, sess):
-        # add the audio_idx as a field in db
-        sess['audio_idx'] += 1
-        if sess['audio_idx'] >= 8:
-            sess['audio_idx'] = 0
-
-        row = db.session.execute(db.select( User.current_record,
-                                            User.record_count,
-                                            User.filters,
-                                            User.urls,
-                                            User.ids)
-                                            .where(User.username==sess['user'])).first()
-        
-        self._update_form_from_db(row.filters)
-        g.fp = row.urls[row.current_record+sess['audio_idx']]
-        g.id_group = row.ids[row.current_record:row.current_record+8]
-
-        self.message = f'Showing record {row.current_record} through {row.current_record+8} of {row.record_count}' 
-        
-
-
-    def get_next_record(self, sess):      
-        row = db.session.execute(db.select(User.record_count, 
-                                            User.current_record,
-                                            User.filters,
-                                            User.urls)
-                                            .where(User.username==sess['user'])).first()
-        
+        # Pull user record and update filters
+        row = self.get_user_record(sess)
         self._update_form_from_db(row.filters)
         
-        record_count=row.record_count
-        files = row.urls        
-        next_record = row.current_record + 1
+        # Check audio index 
+        audio_idx = row.audio_idx + 1
+        if audio_idx >= self.group_size:
+            audio_idx = 0
 
-        # check we aren't going over 
-        if next_record >= record_count:
-            next_record = 0
-        # flash a message here
-        
-        g.fp = files[next_record]
-        self.message = f'Showing record {next_record+1} of {record_count}' 
-        
-        # udpate db with curr record
-        upd = (update(User)
-            .where(User.username==sess['user'])
-            .values(current_record = next_record))
+        # Get current record id
+        g.id_group = row.ids[row.current_record:row.current_record+self.group_size]
+        self.curr_id = g.id_group[audio_idx]
 
-        db.session.execute(upd)
-        db.session.commit()
-     
+        # Get filepath, set global
+        record = self.get_record_by_id(self.curr_id)
+        g.fp = record.filepath
+
+        # set messages
+        self.message = f'Showing record {row.current_record+1} through {row.current_record+8} of {row.record_count}' 
+        self.set_current_record_info(record)
+
+        # update db
+        self.update_record_number(sess, row.current_record,audio_idx=audio_idx)
 
 
-    def _update_form_from_db(self,filters):
-        g.form.actor.data      = filters['actor']
-        g.form.sex.data       = filters['sex']
-        g.form.statement.data = filters['statement']
-        g.form.emotion.data   = filters['emotion']
-        g.form.intensity.data = filters['intensity']
-        
-        g.form.num_mels.data  = filters['num_mels']
-        g.form.num_mfcc.data  = filters['num_mfcc']
+    
+
+
+
+    

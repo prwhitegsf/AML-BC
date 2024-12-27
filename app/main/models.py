@@ -34,10 +34,10 @@ class User(db.Model):
    __tablename__="users"
    id: Mapped[int] = mapped_column(primary_key=True,autoincrement=True)
    username: Mapped[str]
-   urls: Mapped[list[str]] = mapped_column(ARRAY(String))
-   ids: Mapped[list[int]] = mapped_column(ARRAY(Integer))
-   record_count: Mapped[int]
-   current_record: Mapped[int]
+   ids: Mapped[list[int]] = mapped_column(ARRAY(Integer),default=list(range(1,1441)))
+   record_count: Mapped[int]=mapped_column(Integer,default=1440)
+   current_record: Mapped[int]=mapped_column(Integer,default=0)
    filters: Mapped[JSON]=mapped_column(type_=JSON)
+   audio_idx : Mapped[int]=mapped_column(Integer,default=0)
    last_access: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(),onupdate=func.now())
