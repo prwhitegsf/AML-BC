@@ -1,41 +1,18 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-import sys
+from setup.modules.setup_modules import remove_users_by_time, remove_all_users
 
-from sqlalchemy.sql import func
-from datetime import datetime, timedelta
-from create_db import User
-from sqlalchemy import delete
+dbname = input("Please enter the database name: ") 
 
-from app.main.models import Ravdess,User,Base
+prompt = "To remove all users, enter 'a': \nTo remove by time, enter 't': "
 
-# remove user record if older than 10 minutes
-remove_after = 10 
+sel = input(prompt)
 
-if len(sys.argv) > 1:
-    remove_after=int(sys.argv[1])
-
-
-def get_engine(db_name):
-    return create_engine(f'postgresql+psycopg2://postgres:abc@localhost/{db_name}')
-
-dbname='app.db'
-# probably a better way to do this 
-users=[]
-with Session(get_engine(dbname)) as sess:
-
-    rows= sess.query(func.now()-User.last_access,User.username).all()
-    for row in rows:
-        minutes = row[0].total_seconds() // 60
-        print(minutes)
-        if minutes > remove_after:
-            users.append(row.username)
-
-    sess.execute(delete(User).where(User.username.in_(users)))
-    sess.commit()
-
-       
-
- 
+if sel == 'a':
+    rows = remove_all_users(dbname)
+    print(f'Removed {rows} rows from User')
+elif sel == 't':
+    minutes = input("Enter expiration in minutes: ")
+    remove_users_by_time(dbname, minutes)
+else:
+    print("invalid selection, please try again")
 
 

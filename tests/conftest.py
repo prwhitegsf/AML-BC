@@ -33,6 +33,6 @@ def app_ctx(app):
        # app.session_interface.client.session.close()
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def client(app):
     return app.test_client()

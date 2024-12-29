@@ -21,12 +21,12 @@ def get_audio_data(sess):
 
 class AudioFeatures():
 
-    def __init__(self, sess):
+    def __init__(self, n_mels=128, n_mfcc=40):
         #fp = sess['record_list'][sess['curr_record']] 
         fp=g.fp
         self.wav, self.sr = torchaudio.load(fp)
-        self.n_mels = 128#int(sess['form']['num_mels'])
-        self.n_mfcc = 40#int(sess['form']['num_mfcc'])
+        self.n_mels = n_mels
+        self.n_mfcc = n_mfcc
        
 
 

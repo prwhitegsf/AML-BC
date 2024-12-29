@@ -60,6 +60,37 @@ incompat_filters = [
 ]
 
 
+
+
+label_filters = [
+    ({'actor'   : '1',
+    'sex'       : 'all', 
+    'statement'  : '1',
+    'emotion'    : ['angry'],
+    'intensity'  : '1',
+    'num_mels'   : '128',
+    'num_mfcc'   : '40',
+    'submit'     : 'Submit'
+    }),
+    ({'actor'   : '2',
+    'sex'       : 'all', 
+    'statement'  : '1',
+    'emotion'    : ['happy'],
+    'intensity'  : '2',
+    'num_mels'   : '128',
+    'num_mfcc'   : '40',
+    'submit'     : 'Submit'
+    }),
+    ({'actor'   : 'all',
+    'sex'       : 'male', 
+    'statement'  : 'all',
+    'emotion'    : 'all',
+    'intensity'  : 'all',
+    'num_mels'   : '128',
+    'num_mfcc'   : '40',
+    'submit'     : 'Submit'
+    })]
+
 filter_two_results = {
     'actor'     :'1',
     'sex'       : 'all', 

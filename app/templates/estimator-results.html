@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Estimator Results</h1>
+
+    <div class="content">
+        <div class="content-info">
+            <img id="plot" src="{{ url_for('static',filename=img_file) }}" alt="Matplotlib Plot" class="responsive-label-viz">
+            <div class="text-box">
+            {% for attr in label_info %}
+                {{attr}}<br>
+            {% endfor %}
+              
+            </div>
+        
+        </div>
+        
+        <div class="content-viz">
+            <p id="'svc-results">
+                SVC Results<br>
+                <table>
+                    <tr>
+                        <th>Recall</th>
+                        <th>Precision</th>
+                        <th>Accuracy</th>
+                    </tr>
+                    {% for row in svc_scores %}
+                        
+                        <tr>
+                            {% for val in row %}
+                            <td>{{val}}</td>
+                            {% endfor %}
+                        </tr> 
+                                        
+                    {% endfor %}
+                
+            </table>
+            </p> 
+            <p>
+            LinearSVC Results<br>
+                <table>
+                    <tr>
+                        <th>Recall</th>
+                        <th>Precision</th>
+                        <th>Accuracy</th>
+                    </tr>
+                    {% for row in linsvc_scores %}
+                    <tr>
+                        {% for val in row %}
+                        <td>{{val}}</td>
+                        {% endfor %}
+                    </tr> 
+                                            
+                    {% endfor %}
+                </table>
+            </p>
+        </div>  
+
+    </div>
+
+{% endblock %}

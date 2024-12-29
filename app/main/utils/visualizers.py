@@ -204,3 +204,40 @@ def get_mfcc_plots(sess, af):
 
     fig.savefig(f'app/static/img/{fname}.png',format='png')
     return f'img/{fname}.png'
+
+
+
+    
+      
+def show_label_distribution(record):
+    
+    label_count = record.record_count
+    non_label_count = 1440 - label_count
+   
+    
+    width = 0.25
+
+    fig = Figure(figsize=(2, 3),layout='constrained')
+    ax= fig.subplots()
+    rects= ax.bar('non-labels',non_label_count,width)
+    ax.bar_label(rects, label_type='edge')
+
+    rects= ax.bar('labels',label_count,width)
+    ax.bar_label(rects, label_type='edge')
+
+    ax.set_title("Label Distribution")
+    ax.tick_params(axis='y',labelsize=7)
+    ax.tick_params(axis='y',labelsize=7)
+    ax.title.set_size(10)
+    #ax.set_xticks(x+width,xlabels)
+    ax.set_ylim(0, 1600)
+
+    for filename in os.listdir('app/static/img/'):
+             os.remove('app/static/img/' + filename)
+    
+    letters = string.ascii_lowercase
+         
+    fname = ''.join(random.choice(letters) for i in range(5))
+
+    fig.savefig(f'app/static/img/{fname}.png',format='png')
+    return f'img/{fname}.png'

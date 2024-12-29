@@ -103,7 +103,8 @@ class SessionManager():
                .where(User.username==username)
                .values( record_count=record_count,
                         ids=ids,
-                        filters=filters))
+                        filters=filters,
+                        current_record=0))
 
         db.session.execute(upd)
         db.session.commit()
@@ -131,6 +132,13 @@ class SessionManager():
 
 # General - used by both the feature-extractor and label-selector ---------------------------
     
+    def get_mels_and_mfcc_from_form(self,form):
+        """ Requires g.forms to have data"""
+        g.n_mels = int(form.num_mels.data)
+        g.n_mfcc = int(form.num_mfcc.data)
+
+
+
     def check_incompatable_filters(self):
         """Check that the form isn't selecting a sex with an incompatable actor number"""
         if g.form.actor.data == 'all' or g.form.sex.data =='all':
@@ -156,6 +164,9 @@ class SessionManager():
         record = self.get_record_by_id(self.curr_id)
         g.fp = record.filepath
         g.id_group = list(range(1,self.group_size+1))
+
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
 
         # Messages
         self.set_current_record_info(record)
@@ -207,6 +218,9 @@ class SessionManager():
         # Get record id
         self.curr_id = ids[0]
 
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
+
         # get filepath
         record = self.get_record_by_id(self.curr_id)
         g.fp = record.filepath
@@ -237,6 +251,9 @@ class SessionManager():
         record = self.get_record_by_id(self.curr_id)
         g.fp = record.filepath
 
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
+
         # set messages
         self.message = f'Showing record {next_record+1} of {record_count}'
         self.set_current_record_info(record)
@@ -255,13 +272,16 @@ class SessionManager():
         record_count = len(ids)
         
         # check size of returned data against group_size
-        if record_count >= self.group_size:
-            g.id_group = ids[0:self.group_size]
-        else:
-            g.id_group = ids[0:record_count]
+        if record_count < self.group_size:
+            self.group_size=record_count
+
+        g.id_group = ids[0:self.group_size]
 
         # get record id
         self.curr_id = g.id_group[0]
+
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
 
         # get filepath
         record = self.get_record_by_id(self.curr_id)
@@ -280,16 +300,27 @@ class SessionManager():
         # Pull user record and update filters
         row = self.get_user_record(sess)
         self._update_form_from_db(row.filters)
-        
+
+        if row.record_count < self.group_size:
+            self.group_size=row.record_count
+
+
         # check we aren't going over, if we are simply loop back to first record group
-        next_rec = row.current_record+8
-        record_count=row.record_count
-        end_record = next_rec + 8
+        next_rec = row.current_record + self.group_size
+        end_record = next_rec + self.group_size
         updated_record_number = next_rec
         
-        if end_record >= record_count:
-            end_record=record_count # only display the remaining images
-            updated_record_number=next_rec = -1 * self.group_size # loop back to beginning on next "Next"
+        if next_rec >= row.record_count:
+            next_rec = 0
+            end_record = row.record_count
+
+
+        if end_record >= row.record_count:
+            end_record = row.record_count # only display the remaining images
+            updated_record_number = -1*self.group_size # loop back to beginning on next "Next"
+
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
 
         # Group and current record ids
         g.id_group = row.ids[next_rec : end_record]
@@ -300,7 +331,7 @@ class SessionManager():
         g.fp = record.filepath
         
         # Set messages
-        self.message = f'Showing record {next_rec+1} through {end_record} of {record_count}' 
+        self.message = f'Showing record {next_rec+1} through {end_record} of {row.record_count}' 
         self.set_current_record_info(record)
 
         # update db
@@ -312,10 +343,17 @@ class SessionManager():
         row = self.get_user_record(sess)
         self._update_form_from_db(row.filters)
         
+        if len(row.ids) < self.group_size:
+            self.group_size=len(row.ids)
+
+
         # Check audio index 
         audio_idx = row.audio_idx + 1
         if audio_idx >= self.group_size:
             audio_idx = 0
+
+        # set mels and mfccs
+        self.get_mels_and_mfcc_from_form(g.form)
 
         # Get current record id
         g.id_group = row.ids[row.current_record:row.current_record+self.group_size]
@@ -326,7 +364,7 @@ class SessionManager():
         g.fp = record.filepath
 
         # set messages
-        self.message = f'Showing record {row.current_record+1} through {row.current_record+8} of {row.record_count}' 
+        self.message = f'Showing record {row.audio_idx+1} through {row.current_record+self.group_size} of {row.record_count}' 
         self.set_current_record_info(record)
 
         # update db

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from app.main.utils.feature_extractors import AudioFeatures, get_audio_data
 import app.main.utils.visualizers as viz
 from app.main.utils.session_manager import SessionManager
+from app.main.utils.estimator_evaluation import EvaluateResults
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -39,7 +40,7 @@ def feature_extractor():
             s.get_next_record(sess)
 
         
-    af1 = AudioFeatures(sess)
+    af1 = AudioFeatures(g.n_mels,g.n_mfcc)
     audio_file = af1.save_audio_to_file()
     img_file=viz.get_feature_extraction_plots(af1)
 
@@ -73,7 +74,7 @@ def get_label_mfccs():
     if request.method == 'POST':
         # add check user function
         if g.form.submit.data:
-            if s.check_incompatiable_filters():
+            if s.check_incompatable_filters():
                 flash("Incompatible actor and sex settings: ")
                 flash(s.flashed)
                 return redirect(url_for('main.get_label_mfccs'))
@@ -87,7 +88,7 @@ def get_label_mfccs():
             s.get_next_audio_from_group(sess)
 
 
-    af1 = AudioFeatures(sess)
+    af1 = AudioFeatures(g.n_mels,g.n_mfcc)
     audio_file = af1.save_audio_to_file()
     img_file=viz.get_mfcc_plots(sess, af1)
 
@@ -100,3 +101,31 @@ def get_label_mfccs():
         record_count_text=s.message, 
         record_text=s.curr_record_info,
         record_id=s.curr_id)
+
+
+@bp.route('/estimator-results',methods=['GET','POST'])
+def view_estimator_results():
+    sm = SessionManager()
+    record = sm.get_user_record(sess)
+    # check that there's valid session information, redirect to label-mfccs if not
+    er = EvaluateResults()
+
+    if request.method == 'GET':
+        er.make_feature_and_label_arrays(record)
+        er.scale_features()
+        er.encode_labels()
+        er.split_dataset()
+
+        svc_scores = er.get_SVC_scores()
+        linsvc_scores = er.get_LinearSVC_scores()
+
+        img_file = viz.show_label_distribution(record)
+        label_info=er.make_label_distribution_labels(record)
+
+
+
+    return render_template('estimator-results.html',
+                           img_file=img_file,
+                           label_info=label_info,
+                           svc_scores=svc_scores,
+                           linsvc_scores=linsvc_scores)
