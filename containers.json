@@ -1,0 +1,8 @@
+{
+    "flask": {
+        "image": ":audioml.aml-bc.3",
+        "ports": {
+            "5000": "HTTP"
+        }
+    }
+}

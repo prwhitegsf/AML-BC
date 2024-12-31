@@ -1,14 +1,19 @@
 from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
-
+from sqlalchemy_utils import database_exists, create_database
 from app.main.models import User
 
- 
+from config import Config 
 
 
 def get_engine(db_name):
-    return create_engine(f'postgresql+psycopg2://postgres:abc@localhost/{db_name}')
+        engine = create_engine(f'postgresql://postgres:abc@db:5432/{db_name}')
+        if not database_exists(engine.url):
+            create_database(engine.url)
+        return engine
+
+
  
 
 def remove_users_by_time(dbname, expiry_minutes):

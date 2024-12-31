@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import os
 import torchaudio
 import torchaudio.transforms as T
-
+from setup.modules.setup_modules import get_engine
 import numpy as np
 import pandas as pd
 
@@ -47,7 +47,7 @@ def write_features_to_npy(file_list, mels, mfcc):
 dbname = 'app.db'
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-engine = sa.create_engine(f'postgresql+psycopg2://postgres:abc@localhost/{dbname}')
+engine = get_engine(dbname)
 session = Session(engine)
 stmt = sa.select(rm).order_by(rm.id)
 file_list = [(rec.filepath,rec.id) for rec in session.scalars(stmt)]

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import os, glob
 import sys
 from sqlalchemy_utils import database_exists, create_database
-
+from setup.modules.setup_modules import get_engine
 from app.main.models import Ravdess,User,Base
 
 
@@ -27,16 +27,9 @@ class CreateRAVDESSMetadata():
         }
 
         self.dataset_folder = folder
-        self.engine = self.get_engine(db_name)
+        self.engine = get_engine(db_name)
         self.metadata_obj = Base.metadata.create_all(self.engine)
         
-
-    def get_engine(self,db_name):
-        engine = create_engine(f'postgresql+psycopg2://postgres:abc@localhost/{db_name}')
-        if not database_exists(engine.url):
-            create_database(engine.url)
-        return engine
-
     def get_actor(self, filename):
         return int(filename.split("-")[6].split('.')[0]) 
         
@@ -69,7 +62,7 @@ class CreateRAVDESSMetadata():
 
    
 
-dbname = 'dbtest.db'
+dbname = 'dbtest'
 
 if len(sys.argv) > 1:
     dbname=sys.argv[1]

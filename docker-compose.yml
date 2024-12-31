@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports:
+      - 5000:5000
+    environment:
+      FLASK_DEBUG: 1
+    entrypoint: ./docker-entrypoint.sh  
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: abc
+      POSTGRES_DB: app
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    ports:
+     - 8080:8080
+volumes:
+  db_data:

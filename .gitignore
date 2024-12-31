@@ -77,6 +77,8 @@ Thumbs.db
 config.py
 secrets.py
 *.key
+*.pem
+*Zone.Identifier
 
 # audio
 *.wav
